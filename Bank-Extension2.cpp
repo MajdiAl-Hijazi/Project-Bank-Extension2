@@ -279,11 +279,11 @@ void PrintClientCard(sClient Client)
 {
     cout << "\nThe following are the client details:\n";
     cout << "-----------------------------------";
-    cout << "\nAccout Number: " << Client.AccountNumber;
-    cout << "\nPin Code     : " << Client.PinCode;
-    cout << "\nName         : " << Client.Name;
-    cout << "\nPhone        : " << Client.Phone;
-    cout << "\nAccount Balance: " << Client.AccountBalance;
+    cout << "\nAccout Number   : " << Client.AccountNumber;
+    cout << "\nPin Code        : " << Client.PinCode;
+    cout << "\nName            : " << Client.Name;
+    cout << "\nPhone           : " << Client.Phone;
+    cout << "\nAccount Balance : " << Client.AccountBalance;
     cout << "\n-----------------------------------\n";
 
 }
@@ -819,9 +819,8 @@ void ShowMainMenue()
     PerfromMainMenueOption((enMainMenueOptions)ReadMainMenueOption());
 }
 
-int main()
+int main() {
 
-{
     ShowMainMenue();
     system("pause>0");
     return 0;

@@ -6,6 +6,7 @@
 
 using namespace std;
 const string ClientsFileName = "Clients.txt";
+const string UsersFileName = "Users.txt";
 
 
 void ShowMainMenue();
@@ -21,6 +22,13 @@ struct sClient
     bool MarkForDelete = false;
 
 
+};
+
+struct sUser {
+
+    string Username;
+    string Password;
+    short Permisions;
 };
 
 vector<string> SplitString(string S1, string Delim)
@@ -52,7 +60,7 @@ vector<string> SplitString(string S1, string Delim)
 
 }
 
-sClient ConvertLinetoRecord(string Line, string Seperator = "#//#")
+sClient ConvertLinetoRecordClients(string Line, string Seperator = "#//#")
 {
 
     sClient Client;
@@ -103,7 +111,7 @@ bool ClientExistsByAccountNumber(string AccountNumber, string FileName)
         while (getline(MyFile, Line))
         {
 
-            Client = ConvertLinetoRecord(Line);
+            Client = ConvertLinetoRecordClients(Line);
             if (Client.AccountNumber == AccountNumber)
             {
                 MyFile.close();
@@ -172,7 +180,7 @@ vector <sClient> LoadCleintsDataFromFile(string FileName)
         while (getline(MyFile, Line))
         {
 
-            Client = ConvertLinetoRecord(Line);
+            Client = ConvertLinetoRecordClients(Line);
 
             vClients.push_back(Client);
         }
@@ -819,9 +827,87 @@ void ShowMainMenue()
     PerfromMainMenueOption((enMainMenueOptions)ReadMainMenueOption());
 }
 
-int main() {
+sUser ConvertLineToRecordUsers(string Line) {
+
+    sUser User;
+    vector<string> vUser = SplitString(Line, "#//#");
+
+    User.Username = vUser[0];
+    User.Password = vUser[1];
+    User.Permisions = stoi(vUser[2]);
+
+    return User;
+}
+
+vector<sUser> LoadDataUsersFromFile(string FileName) {
+
+    vector<sUser> vUsers;
+    fstream MyFile;
+
+    MyFile.open(FileName, ios::in);
+
+    if (MyFile.is_open()) {
+    
+        string Line;
+        sUser User;
+
+        while (getline(MyFile, Line)) {
+        
+            vUsers.push_back(ConvertLineToRecordUsers(Line));
+        }
+
+        MyFile.close();
+    }
+
+    return vUsers;
+}
+
+bool FindUserByUserName(string Username, string Password, vector<sUser> vUsers) {
+
+    for (sUser& U : vUsers)
+        if (U.Username == Username && U.Password == Password)
+            return true;
+
+    return false;
+}
+
+void HeaderLogin() {
+
+    cout << "-----------------------------\n";
+    cout << "\tLogin Screen\n";
+    cout << "-----------------------------\n";
+}
+
+void Login() {
+
+    HeaderLogin();
+
+    vector<sUser> vUsers = LoadDataUsersFromFile(UsersFileName);
+
+    sUser User;
+    cout << "Enter Username ? ";
+    getline(cin >> ws, User.Username);
+
+    cout << "Enter Password ? ";
+    getline(cin >> ws, User.Password);
+
+    while(!FindUserByUserName(User.Username, User.Password, vUsers)) {
+
+        system("cls");
+        HeaderLogin();
+        cout << "Invalid Username/Password!\n";
+        cout << "Enter username ? ";
+        getline(cin >> ws, User.Username);
+        cout << "Enter Password ? ";
+        getline(cin >> ws, User.Password);
+    }
 
     ShowMainMenue();
+}
+
+int main() {
+
+    Login();
     system("pause>0");
     return 0;
 }

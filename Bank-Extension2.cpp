@@ -37,6 +37,7 @@ void ManageUsersScreen(sUser User);
 void ShowMainMenue(sUser User);
 bool FindUserByUserName(string UserName, vector<sUser> vUsers, sUser& User);
 vector<sUser> LoadDataUsersFromFile(string FileName);
+void GivePermisions(sUser& User);
 
 vector<string> SplitString(string S1, string Delim)
 {
@@ -72,7 +73,12 @@ bool CheckPermisions(sUser User, enPermisionsValue PermissionValue) {
     if (User.UserPermisions == enPermisionsValue::allpermisions)
         return true;
 
-    switch (PermissionValue) {
+    if ((User.UserPermisions & PermissionValue) == PermissionValue)
+        return true;
+
+    return false;
+
+    /*switch (PermissionValue) {
     
     case enPermisionsValue::showclients:
         if ((User.UserPermisions & enPermisionsValue::showclients) == enPermisionsValue::showclients)
@@ -111,7 +117,7 @@ bool CheckPermisions(sUser User, enPermisionsValue PermissionValue) {
 
     default:
         return false;
-    }
+    }*/
 }
 
 sClient ConvertLinetoRecordClients(string Line, string Seperator = "#//#")
@@ -418,6 +424,20 @@ sClient ChangeClientRecord(string AccountNumber)
 
 }
 
+sUser ChangeUserRecord(string UserName) {
+
+    sUser User;
+
+    User.UserName = UserName;
+
+    cout << "\n\nEnter Password ? ";
+    getline(cin >> ws, User.UserPassword);
+
+    GivePermisions(User);
+
+    return User;
+}
+
 bool MarkClientForDeleteByAccountNumber(string AccountNumber, vector <sClient>& vClients)
 {
 
@@ -666,9 +686,46 @@ bool UpdateClientByAccountNumber(string AccountNumber, vector <sClient>& vClient
 
 }
 
-bool DepositBalanceToClientByAccountNumber(string AccountNumber, double Amount, vector <sClient>& vClients)
+bool UpdateUserByUserName(string UserName, vector <sUser>& vUsers)
 {
 
+    sUser User;
+    char Answer = 'n';
+
+    if (FindUserByUserName(UserName, vUsers, User)) {
+
+        PrintUserCard(User);
+        cout << "\n\nAre you sure you want update this User ? y/n ? ";
+        cin >> Answer;
+        if (Answer == 'y' || Answer == 'Y')
+        {
+
+            for (sUser& C : vUsers)
+            {
+                if (C.UserName == UserName)
+                {
+                    C = ChangeUserRecord(UserName);
+                    break;
+                }
+
+            }
+
+            SaveUsersDataToFile(UsersFileName, vUsers);
+
+            cout << "\n\nUser Updated Successfully.";
+            return true;
+        }
+
+    }
+    else{
+
+        cout << "\nUser with User Name (" << UserName << ") is Not Found!";
+        return false;
+    }
+
+}
+
+bool DepositBalanceToClientByAccountNumber(string AccountNumber, double Amount, vector <sClient>& vClients) {
 
     char Answer = 'n';
 
@@ -710,7 +767,7 @@ string ReadClientAccountNumber()
 string ReadUserName() {
 
     string UserName = "";
-    cout << "\nPlease Username ? ";
+    cout << "\nPlease Enter Username ? ";
     cin >> UserName;
     return UserName;
 }
@@ -751,8 +808,19 @@ void ShowDeleteClientScreen(sUser User)
 
 }
 
-void ShowUpdateClientScreen(sUser User)
-{
+void ShowUpdateUserScreen() {
+
+    cout << "\n-----------------------------------\n";
+    cout << "\tUpdate User Info Screen";
+    cout << "\n-----------------------------------\n";
+
+    vector <sUser> vUsers = LoadDataUsersFromFile(UsersFileName);
+    string UserName = ReadUserName();
+    UpdateUserByUserName(UserName, vUsers);
+}
+
+void ShowUpdateClientScreen(sUser User) {
+
     if (CheckPermisions(User, enPermisionsValue::updateclient)) {
 
         cout << "\n-----------------------------------\n";
@@ -780,6 +848,22 @@ void ShowAddNewClientsScreen(sUser User)
     else
         NoAccessScreen();
 
+}
+
+void ShowFindUserScreen() {
+
+        cout << "\n-----------------------------------\n";
+        cout << "\tFind User Screen";
+        cout << "\n-----------------------------------\n";
+
+        vector <sUser> vUsers = LoadDataUsersFromFile(UsersFileName);
+        sUser User;
+        string UserName = ReadUserName();
+
+        if (FindUserByUserName(UserName, vUsers, User))
+            PrintUserCard(User);
+        else
+            cout << "\nClient with Account Number[" << UserName << "] is not found!";
 }
 
 void ShowFindClientScreen(sUser User)
@@ -983,7 +1067,7 @@ vector<sUser> LoadDataUsersFromFile(string FileName) {
     return vUsers;
 }
 
-bool FindUserByUserName(string UserName, string UserPassword, vector<sUser> vUsers, sUser& User) {
+bool FindUserByUserNameAndPassword(string UserName, string UserPassword, vector<sUser> vUsers, sUser& User) {
 
     for (sUser& U : vUsers)
         if (U.UserName == UserName && U.UserPassword == UserPassword) {
@@ -1019,9 +1103,9 @@ void GivePermisions(sUser& User) {
         return;
     }
 
-    cout << "Do you wabt give access to :\n\n";
+    cout << "\nDo you want give access to :\n\n";
 
-    cout << "Show clients list ? y/n ? ";
+    cout << "\nShow clients list ? y/n ? ";
     cin >> Access;
     if (Access == 'Y' || Access == 'y')
         User.UserPermisions = (User.UserPermisions | enPermisionsValue::showclients);
@@ -1122,13 +1206,13 @@ void PerformManageUsersOption(enManageUsers ManageUsersOption, sUser User)
 
     case enManageUsers::eUpdateUser:
         system("cls");
-        ShowAllUsersScreen();
-        GoBackToManageUsersScreen(User);;
+        ShowUpdateUserScreen();
+        GoBackToManageUsersScreen(User);
         break;
 
     case enManageUsers::eFindUser:
         system("cls");
-        ShowAllUsersScreen();
+        ShowFindUserScreen();
         GoBackToManageUsersScreen(User);
         break;
 
@@ -1190,7 +1274,7 @@ void Login() {
     cout << "Enter Password ? ";
     getline(cin >> ws, User.UserPassword);
 
-    while(!FindUserByUserName(User.UserName, User.UserPassword, vUsers, User)) {
+    while(!FindUserByUserNameAndPassword(User.UserName, User.UserPassword, vUsers, User)) {
 
         system("cls");
         HeaderLogin();
